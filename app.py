@@ -393,9 +393,7 @@ filtered_items = filter_by_date(
     items, start_date, end_date
 )
 
-filtered_refunds = filter_by_date(
-    refunds, start_date, end_date
-)
+filtered_refunds = refunds.copy()
 
 filtered_sessions = filter_by_date(
     sessions, start_date, end_date
