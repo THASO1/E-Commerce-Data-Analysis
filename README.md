@@ -2,6 +2,9 @@
 
 An end-to-end exploratory analysis of a toy-store e-commerce business. This project turns transactional, web-session, marketing, product, and refund data into practical recommendations for growth, marketing efficiency, retention, and product management.
 
+> **🚀 [Open the Live Dashboard](https://maven-ecommerce-analytics.streamlit.app/)**
+
+
 ## Project Overview
 
 The analysis evaluates business performance from March 2012 through March 2015. It combines order-level and website-session data to understand how traffic, conversion, product mix, acquisition channels, customer behavior, and refunds shaped revenue.
