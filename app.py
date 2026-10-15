@@ -271,14 +271,16 @@ def style_figure(fig, height=350):
             xanchor="left",
         ),
         height=height,
-        margin=dict(l=15, r=15, t=65, b=20),
+        margin=dict(l=24, r=24, t=78, b=42),
         legend=dict(
             bgcolor="rgba(0,0,0,0)",
             orientation="h",
             yanchor="bottom",
             y=1.02,
-            xanchor="right",
-            x=1,
+            xanchor="left",
+            x=0,
+            font=dict(size=11),
+            itemwidth=75,
         ),
         xaxis=dict(
             showgrid=False,
@@ -558,13 +560,43 @@ else:
         fig.update_layout(
             title="Monthly Revenue & Profit",
             hovermode="x unified",
-            yaxis_tickprefix="$",
-            yaxis_tickformat=",",
+            margin=dict(l=58, r=24, t=88, b=58),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="left",
+                x=0,
+                font=dict(size=11),
+                itemwidth=90,
+                traceorder="normal",
+            ),
+            xaxis=dict(
+                title="",
+                tickformat="%b %Y",
+                tickangle=0,
+                ticklabelmode="period",
+                nticks=7,
+                automargin=True,
+                showgrid=False,
+                zeroline=False,
+                linecolor=COLORS["border"],
+            ),
+            yaxis=dict(
+                title="",
+                tickprefix="$",
+                tickformat=",.0f",
+                automargin=True,
+                gridcolor="rgba(148,163,184,0.12)",
+                zeroline=False,
+                linecolor=COLORS["border"],
+            ),
         )
 
         st.plotly_chart(
-            style_figure(fig, 380),
+            style_figure(fig, 390),
             use_container_width=True,
+            config={"responsive": True, "displayModeBar": False},
         )
 
     with right:
@@ -763,6 +795,28 @@ else:
         / source_summary["sessions"] * 100,
         0,
     )
+
+    unknown_source = source_summary.loc[
+        source_summary["utm_source"].eq("Unknown")
+    ]
+    if not unknown_source.empty:
+        unknown_revenue = unknown_source["revenue"].sum()
+        unknown_sessions = unknown_source["sessions"].sum()
+        total_source_revenue = source_summary["revenue"].sum()
+        unknown_share = (
+            unknown_revenue / total_source_revenue * 100
+            if total_source_revenue > 0
+            else 0
+        )
+        st.info(
+            f"**Tracking insight — Unknown source:** "
+            f"{unknown_sessions:,.0f} sessions and "
+            f"{money(unknown_revenue)} in attributed revenue "
+            f"({unknown_share:.1f}% of the revenue shown here) have no "
+            f"recorded marketing source. This may reflect missing or "
+            f"unavailable attribution data; review UTM tagging and session "
+            f"tracking before assigning a cause."
+        )
 
     left, right = st.columns(2)
 
@@ -981,12 +1035,20 @@ else:
         subset=["order_item_id", "refund_amount_usd"]
     ).copy()
 
-    # Map refunds to products using the order-item identifier.
+    # Map refunds to products using all order items. Refund dates can fall
+    # outside the selected order-date range, so filtered_items may omit them.
+    item_product_lookup = items[
+        ["order_item_id", "product_id", "product_name"]
+    ].drop_duplicates(subset=["order_item_id"])
+
     refund_items = refund_items.merge(
-        filtered_items[["order_item_id", "product_id", "product_name"]],
+        item_product_lookup,
         on="order_item_id",
         how="left",
         validate="many_to_one",
+    )
+    refund_items["product_name"] = refund_items["product_name"].fillna(
+        "Unknown product"
     )
 
     refund_amount = refund_items["refund_amount_usd"].sum()
